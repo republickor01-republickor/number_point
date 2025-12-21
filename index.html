@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수판 최소 예제</title>
+  <style>
+    body { text-align: center; }
+    canvas { border: 1px solid #aaa; }
+
+    /* 완료 버튼 스타일 */
+    #judgeBtn {
+      padding: 12px 24px;
+      font-size: 16px;
+      display: none;          /* ⭐ 처음엔 숨김 */
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <br><br>
+
+  <!-- 이 버튼을 "완료 / 다음 판"으로 사용 -->
+  <button id="judgeBtn">한 판 더</button>
+
+  <script type="module" src="./global_new.js"></script>
+</body>
+</html>
