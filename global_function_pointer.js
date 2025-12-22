@@ -1,6 +1,6 @@
 // core_function_point.js
 // =======================================
-// Pointer / Coordinate Engine
+// Pointer / Coordinate Engine (Mobile OK)
 // window → canvas 좌표 변환 전담
 // =======================================
 
@@ -11,6 +11,9 @@ let canvasRect = null;
 function initPointer(targetCanvas) {
   canvas = targetCanvas;
   updateCanvasRect();
+
+  // 모바일 회전 / 리사이즈 대응
+  window.addEventListener("resize", updateCanvasRect);
 }
 
 // rect 갱신
@@ -19,24 +22,19 @@ function updateCanvasRect() {
   canvasRect = canvas.getBoundingClientRect();
 }
 
-// 포인터 좌표 갱신
+// 포인터 좌표 갱신 (pointer event 전제)
 function updatePointerPosition(e) {
+  if (!canvasRect) updateCanvasRect();
+
   // =========================
-  // 1. window 기준 (항상)
+  // 1. window 기준
   // =========================
   GLOBAL.pointer.winX = e.clientX;
   GLOBAL.pointer.winY = e.clientY;
 
   // =========================
-  // 2. canvas 기준 (조건부)
+  // 2. canvas 기준
   // =========================
-  if (!canvasRect) {
-    GLOBAL.pointer.canvasX = null;
-    GLOBAL.pointer.canvasY = null;
-    GLOBAL.pointer.insideCanvas = false;
-    return;
-  }
-
   const inside =
     e.clientX >= canvasRect.left &&
     e.clientX <= canvasRect.right &&
@@ -54,10 +52,24 @@ function updatePointerPosition(e) {
   }
 }
 
+// pointer capture (모바일 끊김 방지 핵심)
+function capturePointer(e) {
+  if (canvas && e.pointerId != null) {
+    canvas.setPointerCapture(e.pointerId);
+  }
+}
 
-// 전역 노출 (엔진 함수)
+function releasePointer(e) {
+  if (canvas && e.pointerId != null) {
+    canvas.releasePointerCapture(e.pointerId);
+  }
+}
+
+// 전역 노출
 globalThis.PointerEngine = {
   init: initPointer,
   updateRect: updateCanvasRect,
   update: updatePointerPosition,
+  capture: capturePointer,
+  release: releasePointer,
 };

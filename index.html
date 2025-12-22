@@ -2,26 +2,46 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>수판 최소 예제</title>
-  <style>
-    body { text-align: center; }
-    canvas { border: 1px solid #aaa; }
 
-    /* 완료 버튼 스타일 */
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden; /* 모바일 스크롤 방지 */
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      background: #fff;
+    }
+
+    canvas {
+      width: 100vw;          /* 화면 가로에 맞춤 */
+      height: 70vh;          /* 세로는 비율 */
+      border: 1px solid #aaa;
+      touch-action: none;    /* ⭐ 모바일 드래그 핵심 */
+      display: block;
+    }
+
     #judgeBtn {
+      margin-top: 12px;
       padding: 12px 24px;
       font-size: 16px;
-      display: none;          /* ⭐ 처음엔 숨김 */
+      display: none;
     }
   </style>
 </head>
 <body>
 
-  <canvas id="gameCanvas" width="800" height="600"></canvas>
-  <br><br>
+  <canvas id="gameCanvas"></canvas>
 
-  <!-- 이 버튼을 "완료 / 다음 판"으로 사용 -->
   <button id="judgeBtn">한 판 더</button>
 
   <script type="module" src="./global_new.js"></script>
