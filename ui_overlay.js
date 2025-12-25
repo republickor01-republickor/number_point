@@ -40,7 +40,9 @@ export function drawJudgeResult(ctx, canvas) {
 
   const bubbleW = 300;
   const bubbleH = 80;
-  const x = canvas.width / 2 - bubbleW / 2;
+  const rect = canvas.getBoundingClientRect();
+  const x = rect.width / 2 - bubbleW / 2;
+  //const x=rect.width/2;
   const y = 40;
 
   drawSpeechBubble(
@@ -56,9 +58,10 @@ export function drawJudgeResult(ctx, canvas) {
 
 
 //// 토큰당 나오는 결과값
-function drawSpeechBubble(ctx, x, y, w, h, text, ok) {
+function drawSpeechBubble(ctx, cx, cy, w, h, text, ok) {
   const r = 16;
-
+  const x = cx;
+  const y=cy;
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
