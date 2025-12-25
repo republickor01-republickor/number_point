@@ -197,7 +197,7 @@ function drawNumberLine(ctx, board) {
   ctx.stroke();
 //양수 구간
   ctx.strokeStyle = "#000";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 5;
   ctx.beginPath();
   ctx.moveTo(zeroX, midY);
   ctx.lineTo(board.x + board.width, midY);

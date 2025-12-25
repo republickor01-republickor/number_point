@@ -9,7 +9,7 @@
 // ----------------------------------------------------
 
 export class TokenCard {
-  constructor(x, y, size = 5, raw = "1") {
+  constructor(x, y, size = 1, raw = "1") {
     // 위치 (surface 좌표, 좌상단 기준)
     this.x = x;
     this.y = y;
@@ -82,14 +82,17 @@ export class TokenCard {
   // 토큰 카드 그리기 (판정 기준 네모)
   // --------------------------------------------------
   draw(ctx) {
+    console.log("TOKEN SIZE:", this.size);
     const r = this.size / 2;
     const cx = this.x + r;
     const cy = this.y + r;
-
-    ctx.fillStyle = "#333"; // 진한 점
+    ctx.save();
+    ctx.fillStyle = "#433434ff"; // 진한 점
+    ctx.globalAlpha = 0.7;   // 0.25 ~ 0.4 추천
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
 
     }
 

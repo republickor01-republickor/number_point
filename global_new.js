@@ -51,7 +51,7 @@ function resizeCanvas() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-//resizeCanvas();
+resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
 console.log(canvas.width, canvas.height);

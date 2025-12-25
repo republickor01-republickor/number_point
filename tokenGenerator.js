@@ -156,8 +156,8 @@ export function generateTokensForCurrentBoards(
     tokens.push(
       new TokenCard(
         740 - tokens.length * 40,
-        100,
-        15,
+        80,
+        30,
         data.raw,
         data.value
       )
