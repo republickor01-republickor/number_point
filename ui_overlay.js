@@ -123,10 +123,14 @@ export function drawCurrentValue(ctx) {
   const value = GLOBAL.game.result?.value;
   if (value == null) return;
   const canvas = ctx.canvas; // ⭐ 핵심
+  const rect = canvas.getBoundingClientRect();
+
   ctx.fillStyle = "#333";
   ctx.font = "16px Arial";
   ctx.textAlign = "center";
-  ctx.fillText(`현재 값: ${value}`, canvas.width / 2, 20);
+  ctx.textBaseline = "top";
+
+  ctx.fillText(`현재 값: ${value}`, rect.width / 2, 20);
 }
 export function drawGameResult(ctx) {
   if (!GLOBAL.game.roundFinished) return;
