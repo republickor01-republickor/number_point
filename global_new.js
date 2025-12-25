@@ -41,6 +41,7 @@ canvas.height = 400;
 /* =====================================================
    Canvas Resize (PC / Mobile 공통)
 ===================================================== */
+
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
@@ -50,6 +51,47 @@ function resizeCanvas() {
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
+/*
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+
+  // ⭐ 실제로 보이는 영역
+  const vw = window.innerWidth;
+  const vh = window.visualViewport
+    ? window.visualViewport.height
+    : window.innerHeight;
+
+  // ⭐ CSS 크기 자체를 다시 지정
+  canvas.style.width = vw + "px";
+  canvas.style.height = vh + "px";
+
+  // ⭐ 실제 캔버스 해상도
+  canvas.width = Math.floor(vw * dpr);
+  canvas.height = Math.floor(vh * dpr);
+
+  // ⭐ 좌표계 보정
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+*/
+
+/*function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+
+  const vw = window.innerWidth;
+  const vh = window.visualViewport
+    ? window.visualViewport.height
+    : window.innerHeight;
+
+  canvas.style.width = vw + "px";
+  canvas.style.height = vh + "px";
+
+  canvas.width = Math.floor(vw * dpr);
+  canvas.height = Math.floor(vh * dpr);
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}*/
+
+
 
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
@@ -59,7 +101,7 @@ console.log(canvas.width, canvas.height);
 /* =====================================================
    Board Setup
 ===================================================== */
-let y = 150;
+let y = 110;
 const gap = 5;
 
 GLOBAL.board.instance = new CompositeBoard([
@@ -316,3 +358,6 @@ function clickedEnd(e) {
 startRound();
 
 draw();
+
+
+
