@@ -25,16 +25,19 @@ export const JudgeRegistry = {
   // =====================
   RATIONAL_FINITE_LINE: (args) => { //유한소수
     if (!isFiniteDecimal(args.token)) return false;
+    if (Number.isInteger(args.token.value)) return false; // 핵심
     return judgeInteger_line(args);
   },
 
   RATIONAL_REPEAT_LINE: (args) => { //무한소수
     if (!isRepeatingDecimal(args.token)) return false;
+    if (Number.isInteger(args.token.value)) return false; // 핵심
     return judgeInteger_line(args);
   },
 
   IRRATIONAL_LINE: (args) => { //무리수
     if (!isIrrational(args.token)) return false;
+    if (Number.isInteger(args.token.value)) return false; // 핵심
     return judgeInteger_line(args);
   },
 };
@@ -85,6 +88,7 @@ function getCellRect(value, board) {
 function judgeInteger_line({ token, board }) {
   const value = token.value;// 토큰값가져옴
   if (!Number.isFinite(token.value)) return false;
+  if (Number.isInteger(token.value)) return false;
   const tokenRect = token.getRect();//토큰크기
   // 2️⃣ 가로선 접촉 판정 (⭐ 핵심)
   const onLine = touchesNumberLine(tokenRect, board);

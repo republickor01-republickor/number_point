@@ -17,6 +17,7 @@ export class TokenCard {
     // 크기 (정사각형)
     this.size = size;
 
+    //const {raw, value} = this.generateNumver(context);
     // 토큰이 들고 있는 수식/값 (그대로 표현)
     this.raw = raw;
     this.value = parseValue(raw)
@@ -98,39 +99,22 @@ export class TokenCard {
   // - raw 수식 그대로만 표시
   // - 드래그 중에만 표시
   // --------------------------------------------------
-  drawBalloon(ctx) {
-    this.drawCloudBalloon(ctx);
-   /* if (!this.showBalloon) return;
+  
+  /////////////////상위에서 부르는 함수
+  drawBalloon(ctx) { /// 상위 함수에서 부르는 함수  
+    if (!this.showBalloon) return;
 
-    const text = this.raw; // ⭐ 그대로 표현
-
-    ctx.font = "14px Arial";
-    const padding = 10;
-    const textWidth = ctx.measureText(text).width;
-
-    const bw = textWidth + padding * 2;
-    const bh = 32;
-
-    // 카드 중심 위에 배치
-    const cx = this.x + this.size / 2;
-    const bx = cx - bw / 2;
-    const by = this.y - bh - 8;
-
-    // 풍선 박스
-    ctx.fillStyle = "#ffffff";
-    ctx.strokeStyle = "#333";
-    ctx.lineWidth = 1;
-    ctx.fillRect(bx, by, bw, bh);
-    ctx.strokeRect(bx, by, bw, bh);
-
-    // 텍스트
-    ctx.fillStyle = "#000";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, bx + bw / 2, by + bh / 2);
-  */
+    drawFractionCloudBalloon(ctx, {
+      x: this.x,
+      y: this.y,
+      size: this.size,
+      raw: this.raw,
+    });
+    //this.drawCloudBalloon(ctx);   // 여기서 부름됨
   }
-    drawCloudBalloon(ctx) {
+  /////////////////////////////////////////
+  /////////////////////////////////////////
+  drawCloudBalloon(ctx) {
   if (!this.showBalloon) return;
 
   const text = this.raw;
@@ -180,7 +164,9 @@ export class TokenCard {
   
 
 }
-function parseValue(raw) {
+
+
+function parseValue(raw) {  ///raw -> 표현 방법 
     if (typeof raw !== "string") return NaN;
 
     // 분수 "a/b"
@@ -250,19 +236,79 @@ function drawCloudShape(ctx, x, y, w, h) {
 
   ctx.restore();
 }
-function parseRepeatingDecimal(str) {
-  // 예: "1.2(45)", "0.(3)"
-  const match = str.match(/^(\d*)(?:\.(\d*))?\((\d+)\)$/);
-  if (!match) return NaN;
+//////////////////////////////////////////////////
+// 분수모양의 함수 모양 drowcooud 에서 부른다.
+////////////////////////////////////////////
+// 
+function drawFractionCloudBalloon(ctx, opts) {
+  const { x, y, size, raw } = opts;
+  if (!raw || !raw.includes("/")) return;
 
-  const intPart = match[1] || "0";
-  const nonRepeat = match[2] || "";
-  const repeat = match[3];
+  const [num, den] = raw.split("/");
 
-  const a = Number(intPart + nonRepeat);
-  const b = Number(intPart + nonRepeat + repeat);
-  const n = nonRepeat.length;
-  const r = repeat.length;
+  const cx = x + size / 2;
 
-  return (b - a) / (10 ** n * (10 ** r - 1));
+  // 📏 폭 자동 계산
+  const maxLen = Math.max(num.length, den.length);
+  const bw = Math.max(96, maxLen * 28);
+  const bh = 60;
+
+  const bx = cx - bw / 2;
+  const by = y - bh - 24;
+
+  ctx.save();
+
+  // =========================
+  // 🟢 단일 타원 말풍선
+  // =========================
+  ctx.fillStyle = "#fff";
+  ctx.strokeStyle = "#333";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.ellipse(
+    cx,
+    by + bh / 2,
+    bw / 2,
+    bh / 2,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.stroke();
+
+  // =========================
+  // 🔢 분수
+  // =========================
+  ctx.fillStyle = "#222";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 22px Arial";
+
+  // 분자
+  ctx.fillText(num, cx, by + bh * 0.35);
+
+  // 분수선
+  ctx.beginPath();
+  ctx.moveTo(cx - 22, by + bh * 0.5);
+  ctx.lineTo(cx + 22, by + bh * 0.5);
+  ctx.stroke();
+
+  // 분모
+  ctx.fillText(den, cx, by + bh * 0.68);
+
+  ctx.restore();
 }
+
+
+
+/////////////////////////////////////////////////
+//-----------------------------------------------//
+
+
+
+
+
+
+

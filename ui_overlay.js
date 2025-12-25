@@ -1,7 +1,7 @@
 // ui_overlay.js
 
 export function drawOverlay(ctx, canvas, state) {
-  const PLAY_AREA_Y = 200;
+  const PLAY_AREA_Y = 160;
 
   ctx.save();
 
@@ -15,19 +15,19 @@ export function drawOverlay(ctx, canvas, state) {
 
   // 설명 텍스트
   ctx.fillStyle = "#666";
-  ctx.font = "18px Arial";
+  ctx.font = "15px Arial";
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.fillText("위의 위치를 가진 점을", 600, 145);
-  ctx.fillText("정수 및 해당하는 수직선위에", 550, 175);
+  ctx.fillText("위 점의 위치를 찾아라", 600, 130);
+ 
   
   ctx.fileStyle = "#732";
-  ctx.font = "18px";
+  ctx.font = "15px";
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.fillText("정수 자연수 -> 칸안에 두세요", 30, 80);
+  ctx.fillText("정수 자연수 -> 칸안에 두세요", 30, 100);
   ctx.fillText("무리수,정수가 아닌 유리수", 30, 120);
-  ctx.fillText("수직선에 닿아야 해요 ", 30, 160);
+  ctx.fillText("수직선에 닿아야 해요 ", 30, 140);
   ctx.restore();
 
 
@@ -126,7 +126,7 @@ export function drawCurrentValue(ctx) {
   ctx.fillText(`현재 값: ${value}`, canvas.width / 2, 20);
 }
 export function drawGameResult(ctx) {
-  if (!GLOBAL.game.finished) return;
+  if (!GLOBAL.game.roundFinished) return;
 
   const canvas = ctx.canvas;
 
@@ -176,8 +176,9 @@ export function drawGameResult(ctx) {
 // 좌측 상단 토큰 개수 표시
 // 좌측 상단 토큰 개수 표시 (정답 버전)
 export function drawTokenDots(ctx) {
-  const states = GLOBAL.game.tokenStates || []; // ⭐ 이 줄이 핵심
-  if (!states) return;
+  const total = GLOBAL.tokens.length;
+  const correct = GLOBAL.game.correctCount;
+  const remaining = total - correct;
 
   const startX = 40;
   const y = 30;
@@ -185,27 +186,36 @@ export function drawTokenDots(ctx) {
   const radius = 6;
 
   ctx.save();
-  
 
-  states.forEach((state, i) => {
+  let x = startX;
+
+  // 🔴 맞힌 토큰
+  for (let i = 0; i < correct; i++) {
     ctx.beginPath();
-    ctx.arc(startX + i * gap, y, radius, 0, Math.PI * 2);
-
-    if (state === "correct") {
-      ctx.fillStyle = "#e74c3c"; // 🔴
-    } else if (state === "dragging") {
-      ctx.fillStyle = "#3498db"; // 🔵
-    } else {
-      ctx.fillStyle = "#bbb";    // ⚪
-    }
-
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "#e74c3c";
     ctx.fill();
-  });
+    x += gap;
+  }
+
+  // 🔵 아직 남은 토큰
+  for (let i = 0; i < remaining; i++) {
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "#3498db";
+    ctx.fill();
+    x += gap;
+  }
 
   ctx.restore();
 }
+
 export function drawNextRoundHint(ctx) {
-  if (!GLOBAL.game.roundFinished) return;
+  if (
+    GLOBAL.game.phase !== "roundResult" &&
+    GLOBAL.game.phase !== "askContinue"
+  ) return;
+
 
   const canvas = ctx.canvas;
 
@@ -218,7 +228,7 @@ export function drawNextRoundHint(ctx) {
   ctx.fillText(
     "클릭하면 다음 판으로 넘어갑니다",
     canvas.width / 2,
-    130
+    140
   );
 
   ctx.restore();

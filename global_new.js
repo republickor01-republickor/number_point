@@ -27,12 +27,16 @@ import {
   drawGameResult,
 } from "./ui_overlay.js";
 import { generateTokensForCurrentBoards } from "./tokenGenerator.js";
+import SoundManager from "./soundManager.js";
 
+console.log("BOOT ok")
 /* =====================================================
    Canvas & Context
 ===================================================== */
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+canvas.width = 800;
+canvas.height = 400;
 
 /* =====================================================
    Canvas Resize (PC / Mobile 공통)
@@ -47,32 +51,33 @@ function resizeCanvas() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-resizeCanvas();
+//resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
+
+console.log(canvas.width, canvas.height);
 
 /* =====================================================
    Board Setup
 ===================================================== */
-let y = 200;
+let y = 150;
 const gap = 5;
 
 GLOBAL.board.instance = new CompositeBoard([
   { id:"int_card", kind:"card", min:0, max:10, x:50, y:y, width:700, height:80, judgeId:"NAT_CARD"},
   y += 80 + gap,
-  { id:"INT_LINE", kind:"numberline", min:0, max:10, x:50, y:y, width:700, height:80, judgeId:"NAT_LINE" },
+  { id:"INT_LINE", kind:"numberline", min:0, max:10, x:50, y:y, width:700, height:80, judgeId:"INT_LINE" },
   y += 80 + gap,
-  { id:"lin_a", kind:"sub_num", min:0, max:10, x:50, y:y, width:700, height:5, judgeID:"NAT_CARD"},
+  { id:"lin_a", kind:"sub_num", min:0, max:10, x:50, y:y, width:700, height:5, judgeId:"NAT_CARD"},
 ]);
 
 /* =====================================================
    Game State
 ===================================================== */
 GLOBAL.game = {
-  state: "playing",
-  activeToken: null,
+  phase: "playing",
+  correctCount : 0,
   result: null,
-  roundFinished: false,
-  tokenStates: [],
+  targetValue: false,
 };
 
 let activeToken = null;
@@ -86,17 +91,48 @@ PointerEngine.init(canvas);
    Pointer Events (통합, 모바일 안정)
 ===================================================== */
 canvas.addEventListener(CONST.EVENT.POINTER_DOWN, (e) => {
-  if (GLOBAL.game.state !== "playing") return;
+ 
+   // ⭐ B 설계 기준 다음 판 트리거
+// ⭐ 다음 판 트리거 (최종본)
+  switch (GLOBAL.game.phase) {
 
+    case "roundResult":
+      // 결과를 본 뒤 → 계속할지 묻기
+      GLOBAL.game.phase = "askContinue";
+      startRound();      // 바로 다음 판
+    //  draw();
+      return;
+
+    //case "askContinue":
+      // 버튼 판별 (예시)
+    //  if (clickedContinue(e)) {
+   //     startRound(); // 다음 판
+    //  } else if (clickedEnd(e)) {
+   //     GLOBAL.game.phase = "finished";
+    //  }
+    //  draw();
+    //  return;
+
+    case "finished":
+      // 시즌 종료 화면
+      return;
+
+    case "playing":
+      // 기존 토큰 처리 로직
+      break;
+  }
   canvas.setPointerCapture(e.pointerId);
   PointerEngine.update(e);
-
+//
   const x = GLOBAL.pointer.canvasX;
   const y = GLOBAL.pointer.canvasY;
 
   for (let i = GLOBAL.tokens.length - 1; i >= 0; i--) {
-    if (GLOBAL.tokens[i].contains(x, y)) {
-      activeToken = GLOBAL.tokens[i];
+    const token = GLOBAL.tokens[i];
+    if (token.used) continue;   // 정답 토큰 잠금
+
+    if (token.contains(x, y)) {
+      activeToken = token;
       GLOBAL.game.activeToken = activeToken;
       activeToken.pointerDown(x, y);
       GLOBAL.game.result = null;
@@ -123,6 +159,13 @@ canvas.addEventListener(CONST.EVENT.POINTER_MOVE, (e) => {
 
 canvas.addEventListener(CONST.EVENT.POINTER_UP, (e) => {
   if (!activeToken) return;
+  if (GLOBAL.game.phase !== "playing") {
+  activeToken = null;
+  return;
+  }
+
+
+
 
   canvas.releasePointerCapture(e.pointerId);
   PointerEngine.update(e);
@@ -130,9 +173,12 @@ canvas.addEventListener(CONST.EVENT.POINTER_UP, (e) => {
   activeToken.pointerUp();
 
   const board = findBoardAtToken(activeToken, GLOBAL.board.instance);
+  
+  ///////////////////12/24///////////
+  let ok = false;
   if (board) {
     const judgeFn = JudgeRegistry[board.judgeId];
-    const ok = judgeFn({ token: activeToken, board });
+    ok = judgeFn({ token: activeToken, board });
 
     GLOBAL.game.result = {
       ok,
@@ -140,10 +186,36 @@ canvas.addEventListener(CONST.EVENT.POINTER_UP, (e) => {
       value: activeToken.value,
       visible: true,
     };
+    if (ok) {
+    // 정답일 때만 토큰 소모
+    SoundManager.playCorrect();   // ✅ 정답 소리
+    activeToken.used = true;
+    GLOBAL.game.correctCount +=1;
+    } else {
+    // 오답은 다시 사용 가능
+    SoundManager.playWrong();     // ❌ 오답 소리
+    activeToken.used = false;
+    }
   }
+  
+  // ⭐⭐⭐ B 설계 핵심 ⭐⭐⭐
+  
+
+  // 모든 토큰 정답 → 판 종료
+  if (GLOBAL.game.correctCount === GLOBAL.tokens.length) {
+    GLOBAL.game.phase = "roundResult";
+  }
+
 
   activeToken = null;
   GLOBAL.game.activeToken = null;
+ 
+  console.log(
+  "PHASE:", GLOBAL.game.phase,
+  "CORRECT:", GLOBAL.game.correctCount,
+  "TOKENS:", GLOBAL.tokens.length
+  );
+
 
   draw();
 });
@@ -160,20 +232,24 @@ canvas.addEventListener(CONST.EVENT.POINTER_CANCEL, (e) => {
 ===================================================== */
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  drawCurrentValue(ctx);
-  drawJudgeResult(ctx, canvas);
-  drawTokenDots(ctx);
-  drawOverlay(ctx, canvas, { activeToken });
-  drawNextRoundHint(ctx);
-  drawGameResult(ctx);
-
   GLOBAL.board.instance.render(ctx);
-
   GLOBAL.tokens.forEach(token => {
     token.draw(ctx);
     token.drawBalloon(ctx);
   });
+  //drawOverlay(ctx, canvas, { activeToken });
+
+
+  drawCurrentValue(ctx); 
+  drawTokenDots(ctx);
+
+  drawJudgeResult(ctx, canvas);
+  drawNextRoundHint(ctx);
+  drawGameResult(ctx)
+  drawOverlay(ctx, canvas, { activeToken });
+  //drawStatusPanel(ctx);
+  
+
 }
 
 /* =====================================================
@@ -197,24 +273,46 @@ function findBoardAtToken(token, compositeBoard) {
 /* =====================================================
    Round Control
 ===================================================== */
-function startRound(tokenCount = 5) {
-  GLOBAL.game.state = "playing";
-  GLOBAL.game.roundFinished = false;
-  GLOBAL.game.result = null;
-  GLOBAL.game.tokenStates = [];
+function startRound() {
 
+  activeToken = null;
+
+  GLOBAL.game.activeToken = null;
+  GLOBAL.game.phase = "playing";
+  GLOBAL.game.result = null;
+  GLOBAL.game.correctCount = 0;
+  
+  // 토큰 완전 교체
   GLOBAL.tokens.length = 0;
+
+  
+
   const newTokens = generateTokensForCurrentBoards(
     GLOBAL.board.instance,
-    tokenCount
+    5, /// 토큰의 갯수 생성 이것은 개발자가 정의 하기로 한다.
   );
+  
+  newTokens.forEach(t => {
+    t.used = false;
+  });
+
   GLOBAL.tokens.push(...newTokens);
 
   draw();
 }
+/*function clickedContinue(e) {
+  return true; // 항상 계속
+}
+
+function clickedEnd(e) {
+  return false;
+}
+  */
+
 
 /* =====================================================
    Init
 ===================================================== */
 startRound();
+
 draw();
