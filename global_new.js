@@ -8,10 +8,21 @@
  * - 모바일 드래그 끊김 방지
  * - canvas 비율 안정화
  */
+/*
+export const JudgeRegistry = {
+  NAT_LINE: judgeInteger_line,
+  INT_LINE: judgeInteger_line,
+  RATIONAL_LINE: judgeInteger_line,        // 유리수 전체
+  RATIONAL_FINITE_LINE: judgeRationalFinite,   // 유한소수
+  RATIONAL_INFINITE_LINE: judgeRationalInfinite, // 무한소수
+  IRRATIONAL_LINE: judgeIrrational,        // 무리수
+};
 
-import { boards } from "./boards.js";
-import { drawBoard, valueToX, xToValue } from "./renderBoard.js";
-import { drawVerticalPointer, drawSoftPointerCard } from "./drawUtils.js";
+*/
+
+//import { boards } from "./boards.js";
+//import { drawBoard, valueToX, xToValue } from "./renderBoard.js";
+//import { drawVerticalPointer, drawSoftPointerCard } from "./drawUtils.js";
 import "./global_value.js";
 import "./panel.js";
 import "./core_const.js";
@@ -41,7 +52,6 @@ canvas.height = 400;
 /* =====================================================
    Canvas Resize (PC / Mobile 공통)
 ===================================================== */
-
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
@@ -51,47 +61,6 @@ function resizeCanvas() {
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
-/*
-function resizeCanvas() {
-  const dpr = window.devicePixelRatio || 1;
-
-  // ⭐ 실제로 보이는 영역
-  const vw = window.innerWidth;
-  const vh = window.visualViewport
-    ? window.visualViewport.height
-    : window.innerHeight;
-
-  // ⭐ CSS 크기 자체를 다시 지정
-  canvas.style.width = vw + "px";
-  canvas.style.height = vh + "px";
-
-  // ⭐ 실제 캔버스 해상도
-  canvas.width = Math.floor(vw * dpr);
-  canvas.height = Math.floor(vh * dpr);
-
-  // ⭐ 좌표계 보정
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-}
-*/
-
-/*function resizeCanvas() {
-  const dpr = window.devicePixelRatio || 1;
-
-  const vw = window.innerWidth;
-  const vh = window.visualViewport
-    ? window.visualViewport.height
-    : window.innerHeight;
-
-  canvas.style.width = vw + "px";
-  canvas.style.height = vh + "px";
-
-  canvas.width = Math.floor(vw * dpr);
-  canvas.height = Math.floor(vh * dpr);
-
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-}*/
-
-
 
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
@@ -101,15 +70,25 @@ console.log(canvas.width, canvas.height);
 /* =====================================================
    Board Setup
 ===================================================== */
-let y = 110;
+let y = 120;
 const gap = 5;
-
+const min_Start = 0;
+const max_Start = 10;
 GLOBAL.board.instance = new CompositeBoard([
-  { id:"int_card", kind:"card", min:0, max:10, x:50, y:y, width:700, height:80, judgeId:"NAT_CARD"},
+  //{id:"int_card", kind:"card", min: min_Start, max:max_Start, x:50, y:y, width:700, height:50, judgeId:"INT_CARD"},
+  //y += 50 + gap,
+  //{ id:"INT_LINE", kind:"numberline", min: min_Start, max:max_Start, x:50, y:y, width:700, height:50, judgeId:"RATIONAL_FINITE_LINE" },
+  //y += 50 + gap,
+  //{ id:"lin_a", kind:"sub_num", min: min_Start, max:max_Start, x:50, y:y, width:700, height:5},
+  //y += 0 + gap,
+  //{ id:"INT_LINE1", kind:"numberline", min: min_Start, max:max_Start, x:50, y:y, width:700, height:50, judgeId:"RATIONAL_REPEAT_LINE" },
+  //y += 50 + gap,
+  //{ id:"lin_a1", kind:"sub_num", min: min_Start, max:max_Start, x:50, y:y, width:700, height:5},
+  { id:"int_card", kind:"card", min: min_Start, max:max_Start, x:50, y:y, width:700, height:80, judgeId:"NAT_CARD"},
   y += 80 + gap,
-  { id:"INT_LINE", kind:"numberline", min:0, max:10, x:50, y:y, width:700, height:80, judgeId:"INT_LINE" },
+  { id:"INT_LINE", kind:"numberline", min: min_Start, max:max_Start, x:50, y:y, width:700, height:80, judgeId:"INT_LINE" },
   y += 80 + gap,
-  { id:"lin_a", kind:"sub_num", min:0, max:10, x:50, y:y, width:700, height:5, judgeId:"NAT_CARD"},
+  { id:"lin_a", kind:"sub_num", min: min_Start, max:max_Start, x:50, y:y, width:700, height:5, judgeId:"NAT_CARD"},
 ]);
 
 /* =====================================================
@@ -180,8 +159,11 @@ canvas.addEventListener(CONST.EVENT.POINTER_DOWN, (e) => {
       GLOBAL.game.result = null;
       break;
     }
-  }
+    console.log("token global_new 162",token.raw)
 
+    
+  }
+  //console.log("Token",GLOBAL.tokens);
   draw();
 });
 
@@ -220,7 +202,9 @@ canvas.addEventListener(CONST.EVENT.POINTER_UP, (e) => {
   let ok = false;
   if (board) {
     const judgeFn = JudgeRegistry[board.judgeId];
+    if(!judgeFn) return false;
     ok = judgeFn({ token: activeToken, board });
+    console.log("globasl_new.js 205",ok);
 
     GLOBAL.game.result = {
       ok,
@@ -358,6 +342,3 @@ function clickedEnd(e) {
 startRound();
 
 draw();
-
-
-

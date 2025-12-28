@@ -34,6 +34,14 @@ export function drawBoard(ctx, board) {
   }
 }
 
+const NUMBERLINE_LABELS = {
+  RATIONAL_FINITE_LINE: "유한소수",
+  RATIONAL_REPEAT_LINE: "순환소수",
+  INT_LINE: "정수가 아닌 유리수",
+  IRRATIONAL_LINE: "무리수",
+};
+
+
 
 
 /////////////////===========
@@ -189,8 +197,34 @@ function drawNumberLine(ctx, board) {
   const slotWidth = board.width/slotCount;  ///한개의 슬롯크기
   const zeroRatio = (0-board.min)/(board.max - board.min);
   const zeroX = board.x + zeroRatio * board.width;
+  //////판글씨 쓰기/////
+  const label = NUMBERLINE_LABELS[board.judgeId];
+  if (label) {
+    ctx.save();
+
+    // ⭐ 보드 영역으로 클리핑
+    ctx.beginPath();
+    ctx.rect(board.x, board.y, board.width, board.height);
+    ctx.clip();
+
+    const fontSize = Math.floor(board.height);
+
+  ctx.font = `bold ${fontSize}px Arial`;
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  ctx.fillText(
+    label,
+    board.x + board.width / 2,
+    board.y + board.height / 2
+  );
+
+  ctx.restore();
+  }
+  //------------------//
   ctx.strokeStyle = "#4a6cff";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 5;
   ctx.beginPath();
   ctx.moveTo(board.x, midY);
   ctx.lineTo(zeroX, midY);

@@ -94,3 +94,16 @@ export const boards = [
     minorStep: 1
   }
 ];
+/* 
+// boards.js
+export const boards = [
+  { id: "NAT_LINE", ... },
+  { id: "INT_LINE", ... },
+  { id: "RATIONAL_FINITE_LINE", ... },
+  { id: "RATIONAL_INFINITE_LINE", ... },
+  { id: "IRRATIONAL_LINE", ... },
+];
+
+
+
+*/

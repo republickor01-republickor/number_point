@@ -5,11 +5,21 @@ import { TokenCard } from "./token_card.js";
 ///////////////////////////////////
 /////////토큰 타입 결정/////////////
 /////////////////////////////////////
+/// 유리수 라운드별 정리.. 
+const RATIONAL_DENOMINATOR_BY_ROUND = {
+  1: 10,
+  2: 100,
+  3: 1000,
+  // 4 : 분모가 1~10 까지인 분수 
+};
+
+//🔑 1
 export const TOKEN_TYPES = {
   NATURAL: "natural",    // 자연수
   RATIONAL: "rational",  // 유리수
   IRRATIONAL: "irrational", // 무리수
 };
+//🔑 2
 export const JUDGE_TOKEN_TYPES = {
   NAT_CARD: ["integer_nat"],
   INT_CARD: ["rational"],
@@ -25,41 +35,10 @@ export const JUDGE_TOKEN_TYPES = {
   RATIONAL_REPEAT_LINE: ["rational"],
 
   IRRATIONAL_LINE: ["irrational"],
-
-  // 혼합 보더
- /* RATIONAL_LINE: [
-    "integer",
-    "rational_finite",
-    "rational_repeat",
-  ],
-  */
 };
-/*
-export const JUDGE_TOKEN_TYPES = {
-  NAT_CARD: ["integer_nat"],
-  INT_CARD: ["integer"],
-  NAT_LINE: [
-    "integer_nonneg",     // 0 포함 정수
-    "rational_finite",    // 유한소수
-    "rational_repeat",    // 순환소수
-  ],
-  INT_LINE: ["integer"],
-
-  RATIONAL_FINITE_LINE: ["rational_finite"],
-  RATIONAL_REPEAT_LINE: ["rational_repeat"],
-
-  IRRATIONAL_LINE: ["irrational"],
-
-  // 혼합 보더
-  RATIONAL_LINE: [
-    "integer",
-    "rational_finite",
-    "rational_repeat",
-  ],
-};
-*/
 /* ==================================================
    타입 → 생성기 매핑  매우 중요 
+   🔑 3
 ================================================== */
 const TOKEN_GENERATORS = {
   integer_nat: genNaturalInteger,
@@ -67,20 +46,11 @@ const TOKEN_GENERATORS = {
   irrational: genIrrationalRoot,
 };
 
-/*
-const TOKEN_GENERATORS = { 
-  integer: () => genInteger(false),
-  integer_nat: genNaturalInteger,
-  integer_nonneg: () => genBasicFraction(true),
-  rational_finite: genFiniteDecimal,
-  rational_repeat: genBalancedFraction,
-  irrational: genRadicalNumber, // ← 완전제곱 포함
-};
-*/
 /* ==================================================
    현재 화면의 보더들로부터
    허용 토큰 타입 "합집합" 계산
 ================================================== */
+// ❣️ 4
 function getAllowedTokenTypes(boardInstance) {
   const set = new Set();
 
@@ -101,22 +71,8 @@ function getAllowedTokenTypes(boardInstance) {
   return [...set]; // ✅ 항상 배열
 }
 
-/*
-function getAllowedTokenTypes(boardInstance) {
-  const set = new Set();
-
-  boardInstance.boards.forEach(board => {
-    const types = JUDGE_TOKEN_TYPES[board.judgeId];
-    if (types) {
-      types.forEach(t => set.add(t));
-    }
-  });
-
-  return [...set];
-}
-  */
 /////////////////////////////////////////////////
-// 토큰 메인 작
+// 👉토큰 메인 작 ⭐🚗🚗 5
 /////////////////////////////////////////////////
 export function generateTokensForCurrentBoards(
   boardInstance,
@@ -134,9 +90,10 @@ export function generateTokensForCurrentBoards(
 
     const type = chooseTypeByPriority(allowedTypes, boardInstance);
     const gen = TOKEN_GENERATORS[type];
+    const { min, max } = getNumberLineRange(boardInstance);
     if (!gen) continue;
 
-    const data = gen();
+    const data = gen(min, max);
 
     // =========================
     // ⭐ 범위 체크 (핵심)
@@ -151,22 +108,36 @@ export function generateTokensForCurrentBoards(
     if (!inRange) continue; // ❌ 범위 밖 → 버림
 
     // =========================
-    // 통과 → 토큰 생성
+    // 통과 → 토큰 생성////////////
     // =========================
     tokens.push(
       new TokenCard(
-        740 - tokens.length * 40,
+        700 - tokens.length * 40,
         80,
-        30,
+        20,  // 토큰 사이즈 ?
         data.raw,
-        data.value
+        data.value,
+        data.com_raw,
+        data.difficulty
       )
     );
   }
 
   return tokens;
 }
+/////////////////////////////////////////////////
+// 👉수 라인 min max 값 반환 ⭐🚗🚗 5
+/////////////////////////////////////////////////
+function getNumberLineRange(boardInstance) {
+  const lines = boardInstance.boards.filter(
+    b => b.kind === "numberline"
+  );
 
+  return {
+    min: Math.min(...lines.map(b => b.min)),
+    max: Math.max(...lines.map(b => b.max)),
+  };
+}
 ////////////////////////////////////////////////////
 ////////토큰 타입 결정/////////////
 ////////////////////////////////////////////////////
@@ -205,48 +176,7 @@ function chooseTypeByPriority(allowedTypes, boardInstance) {
 
   return randChoice(allowedTypes);
 }
-
-
-
 ///////////////////////////////////////////////////////
-/* ==================================================
-   유틸
-================================================== */
-function genNaturalInteger() {
-  const n = Math.floor(Math.random() * 9) + 1; // 1~9
-  return {
-    raw: String(n),
-    value: n,
-  };
-}
-///////유리수 분수
-function genRationalFraction() {
-  // 정수 부분을 넓게
-  const integerPart = randInt(0, 9);   // 0~9
-  const decimalPart = randInt(0, 9);   // 소수 한 자리
-
-  const numerator = integerPart * 10 + decimalPart;
-  const denominator = 10;
-
-  return {
-    raw: `${numerator}/${denominator}`,
-    value: numerator / denominator,
-    fraction: { numerator, denominator },
-  };
-}
-
-/// end 유리수 분수 
-
-function genIrrationalRoot() {
-  const base = Math.floor(Math.random() * 8) + 2; // 2~9
-  return {
-    raw: `√${base}`,
-    value: Math.sqrt(base),
-  };
-}
-
-
-
 
 /////////////////////////////////////////////////////////
 function randInt(min, max) {
@@ -257,137 +187,147 @@ function randChoice(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// 자연수 / 정수
-function genInteger(natural = false) {
-  let v;
-  do {
-    v = natural ? randInt(0, 10) : randInt(-10, 10);
-  } while (v === 0 && Math.random() < 0.4); // 0 과다 방지
 
+
+
+
+////////////////////////////////////////////
+///////////수 생성 함수들 집합 //////////////
+///////////////////////////////////////////
+// 👉 자연수 생성 
+//----------------------
+function genNaturalInteger(min, max) {
+  const lo = Math.ceil(min);
+  const hi = Math.floor(max);
+  if (lo > hi) return null;
+  const n = randInt(lo, hi);
   return {
-    raw: String(v),
-    value: v,
+    raw: String(n),
+    value: n,
+    com_raw: {
+    kind: "integer",
+    domain: "natural"
+  },
+  difficulty: 0
   };
 }
-
-// 유한소수 (분수 형태, 값 < 10)
-function genFiniteDecimal() {
-  let num, den, v;
-
-  do {
-    den = randInt(2, 99);
-    num = randInt(1, den - 1);
-    v = num / den;
-  } while (
-    v >= 10 ||
-    Number.isInteger(v)
-  );
-
-  return {
-    raw: `${num}/${den}`,
-    value: v,
-  };
-}
-
-// 순환소수 (1차 고정)
-function genRepeatingDecimal() {
-  const digit = randChoice(["3", "6", "9"]);
-
-  return {
-    raw: `0.(${digit})`,
-    value: Number(`0.${digit.repeat(6)}`),
-  };
-}
-
-// 무리수
-// √n, |n| < 100, 음수 포함, 완전제곱 제외
-function genRadicalNumber() {
-  const n = randInt(1, 99);          // 근호 안은 항상 자연수
-  const sign = Math.random() < 0.5 ? -1 : 1;
-
-  const sqrt = Math.sqrt(n);
-  const value = sign * sqrt;
-  
-  return {
-    raw: sign < 0 ? `-√${n}` : `√${n}`,
-    value: value,                    // 항상 finite
-    isPerfectSquare: Number.isInteger(sqrt), // ⭐ 핵심 정보
-  };
-}
-
-
-
-
-
-
-
-
-
-//////정수에서 자연수만 
-/*
-function genNaturalInteger() {
-  return genInteger(true);
-}*/
-///// 분수의 자동범위로 분수 만들기 
-function genBalancedFraction() {
-  let num, den, v;
-
-  // 분모 범위 선택
-  if (Math.random() < 0.5) {
-    // 작은 분모 (1~10)
-    den = randInt(1, 10);
-    num = randInt(1, 20);
-  } else {
-    // 큰 분모 (10~100)
-    den = randInt(10, 100);
-    num = randInt(100, 1000);
+function genRationalFraction(min, max, level = "R4"){
+    switch (level) {
+    case "R1":
+      return genRational_PowerOf10(min, max, 10, 1);
+    case "R2":
+      return genRational_PowerOf10(min, max, 10, 2);
+    case "R3":
+      return genRational_PowerOf10(min, max, 10, 3);
+    case "R4": // 유리수 생성
+      return genRational_R4(min, max);
   }
-
-  v = num / den;
-
+}
+// 👉 무리수 생성
+// -------------
+function genIrrationalRoot(min, max) {
+  const base = Math.floor(Math.random() * 8) + 2; // 2~9
   return {
-    raw: `${num}/${den}`,
-    value: v,
+    raw: `√${base}`,
+    value: Math.sqrt(base),
   };
 }
-function genFractionByHundred() {
-  const a = randInt(1, 10);    // 정수 부분
-  const b = randInt(0, 100);   // 소수 부분 (0~100)
+//////////////////////////////////////////////
+//수 생성함수 마지막
 
-  // 분자 / 분모 (100으로 나눈 분수)
-  let num = a * 100 + b;
-  let den = 100;
 
-  // 기약분수 만들기
-  const g = gcd(num, den);
-  num /= g;
-  den /= g;
+////////////유리수 난이도별 생성 함수들 //////////////
+function genRational_PowerOf10(min, max, denominator, difficulty) {
+  const nMin = Math.ceil(min * denominator);
+  const nMax = Math.floor(max * denominator);
+  if (nMin > nMax) return null;
 
-  return {
-    raw: `${num}/${den}`,   // 항상 분수
-    value: num / den,       // 판정용 실수
-  };
-}
-function genBasicFraction() {
-  let num = randInt(1, 100); // 분자
-  let den = randInt(1, 10);  // 분모
-
-  // 기약분수
-  const g = gcd(num, den);
-  num /= g;
-  den /= g;
+  const numerator = randInt(nMin, nMax);
+  const value = numerator / denominator;
 
   return {
-    raw: `${num}/${den}`,
-    value: num / den,
+    raw: `${numerator}/${denominator}`,
+    value,
+    com_raw: {
+      kind: "rational",
+      denominator,
+      decimalType: "finite"
+    },
+    difficulty
   };
 }
+ // 분모가 10의 거듭제곱
+
+// 분모가 1~10 까지인수 관리
 function gcd(a, b) {
   while (b !== 0) {
     [a, b] = [b, a % b];
   }
-  return a;
+  return Math.abs(a);
 }
+
+function isFiniteDecimalDenominator(d) {
+  while (d % 2 === 0) d /= 2;
+  while (d % 5 === 0) d /= 5;
+  return d === 1;
+}
+
+function genRational_R4(min, max) {
+  const d = randInt(1, 10);
+
+  const nMin = Math.ceil(min * d);
+  const nMax = Math.floor((max - 1e-9) * d);
+  if (nMin > nMax) return null;
+
+  const n = randInt(nMin, nMax);
+
+  // ⭐ 분모가 1이면 → 정수로 재분류
+  if (d === 1) {
+    return {
+      raw: `${n}/1`,
+      value: n,
+      com_raw: {
+        kind: "integer",
+        source: "R4"
+      },
+      difficulty: 4
+    };
+  }
+
+  // ⭐ 여기서 약분 (핵심)
+  const g = gcd(n, d);
+  const rn = n / g;
+  const rd = d / g;
+
+  // ⭐ 약분된 분모로 판정
+  const finite = isFiniteDecimalDenominator(rd);
+  console.log("tokenGen 304", finite);
+  return {
+    raw: `${n}/${d}`,          // 표현은 원본 유지
+    value: rn / rd,
+    com_raw: {
+      kind: "rational",
+      round: 4,
+      numerator: rn,
+      denominator: rd,
+      decimalType: finite ? "finite" : "infinite"
+    },
+    difficulty: 4
+  };
+}
+  // 분모가 1~10 까지인 분수
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

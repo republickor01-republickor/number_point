@@ -132,3 +132,15 @@ export class TokenCard {
     };
   }
 }
+
+tokens.push(
+      new TokenCard(
+        740 - tokens.length * 40,
+        80,
+        30,
+        data.raw,
+        data.value,
+        data.com_raw,
+        dificulty
+      )
+    );

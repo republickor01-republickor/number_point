@@ -9,7 +9,7 @@
 // ----------------------------------------------------
 
 export class TokenCard {
-  constructor(x, y, size = 1, raw = "1") {
+  constructor(x, y, size = 1, raw = "1", value=1, com_raw) {
     // 위치 (surface 좌표, 좌상단 기준)
     this.x = x;
     this.y = y;
@@ -21,7 +21,7 @@ export class TokenCard {
     // 토큰이 들고 있는 수식/값 (그대로 표현)
     this.raw = raw;
     this.value = parseValue(raw)
-
+    this.com_raw = com_raw; // ⭐ 필수
     // 드래그 상태
     this.dragging = false;
 
@@ -303,15 +303,3 @@ function drawFractionCloudBalloon(ctx, opts) {
 
   ctx.restore();
 }
-
-
-
-/////////////////////////////////////////////////
-//-----------------------------------------------//
-
-
-
-
-
-
-

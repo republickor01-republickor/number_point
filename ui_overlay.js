@@ -18,14 +18,14 @@ export function drawOverlay(ctx, canvas, state) {
   ctx.font = "15px Arial";
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.fillText("아래의 점의 위치를 찾아라", 600, 60);
+  ctx.fillText("아래의 점의 위치를 찾아라", 550, 60);
  
   
   ctx.fileStyle = "#732";
   ctx.font = "15px";
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.fillText("정수 자연수 -> 칸안에 두세요", 30, 50);
+  ctx.fillText("정수 자연수 => 칸안에 두세요", 30, 50);
   ctx.fillText("무리수,정수가 아닌 유리수", 30, 70);
   ctx.fillText("수직선에 닿아야 해요 ", 30, 90);
   ctx.restore();
@@ -231,10 +231,10 @@ export function drawNextRoundHint(ctx) {
   ctx.font = "16px Arial";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-
+  const rect = canvas.getBoundingClientRect();
   ctx.fillText(
     "클릭하면 다음 판으로 넘어갑니다",
-    canvas.width / 2,
+    rect.width / 2,
     140
   );
 

@@ -1,5 +1,16 @@
 import { xToValue } from "./renderBoard.js";
+/*
+export const JudgeRegistry = {
+  NAT_LINE: judgeInteger_line,
+  INT_LINE: judgeInteger_line,
+  RATIONAL_LINE: judgeInteger_line,
+          // 유리수 전체
+  RATIONAL_FINITE_LINE: judgeRationalFinite,   // 유한소수
+  RATIONAL_INFINITE_LINE: judgeRationalInfinite, // 무한소수
+  IRRATIONAL_LINE: judgeIrrational, 
+}
 
+*/
 export const JudgeRegistry = {
   // =====================
   // 카드판
@@ -24,21 +35,30 @@ export const JudgeRegistry = {
   // 수직선 - 성질별 필터
   // =====================
   RATIONAL_FINITE_LINE: (args) => { //유한소수
-    if (!isFiniteDecimal(args.token)) return false;
-    if (Number.isInteger(args.token.value)) return false; // 핵심
+    const info = args.token.com_raw;
+    if (!info) return false;
+    if (info.kind !== "rational") return false;
+    if (info.decimalType !== "finite") return false;
     return judgeInteger_line(args);
   },
 
   RATIONAL_REPEAT_LINE: (args) => { //무한소수
-    if (!isRepeatingDecimal(args.token)) return false;
-    if (Number.isInteger(args.token.value)) return false; // 핵심
-    return judgeInteger_line(args);
-  },
+    //if (!isRepeatingDecimal(args.token)) return false;
+    //if (Number.isInteger(args.token.value)) return false; // 핵심
+    const info = args.token.com_raw;
+    if (!info) return false;
+    if (info.kind !== "rational") return false;
+    if (info.decimalType !== "infinite") return false;
+    const token = args.token;
+    const board = args.board;
+    return judgeInteger_line({ token, board });
+    },
 
   IRRATIONAL_LINE: (args) => { //무리수
-    if (!isIrrational(args.token)) return false;
-    if (Number.isInteger(args.token.value)) return false; // 핵심
-    return judgeInteger_line(args);
+    const info = args.token.com_raw;
+    if (!info) return false;
+    if (info.kind !== "irrational") return false;
+    return judgeInteger_line({ token, board });
   },
 };
 
@@ -95,14 +115,7 @@ function judgeInteger_line({ token, board }) {
   if (!onLine) return false;
   const int_value = Math.floor(token.value);//정수부분
   const cellRect = getCellRect_line(int_value, board);//셀에서의 위치값
-  // 🔍 핵심 디버그 (여기!)
-  console.log("INT__ Line DEBUG", {
-    tokenValue_line: value,
-    boardId_line: board.id,
-    boardMin_line: board.min,
-    boardMax_line: board.max,
-    fullyInside_line: rectFullyInside_line(tokenRect, cellRect),
-  });
+  
   return rectFullyInside_line(tokenRect, cellRect);
 }
 /////수직선셀 은 앞뒤로 반칸을 빼야 한다 
@@ -178,6 +191,7 @@ function judgeNumberLineNonInteger({ token, board }) {
   // =========================
   // 🔍 DEBUG LOG
   // =========================
+  console.log(token.com_raw);
   console.log(
     `[JUDGE:LINE] ${board.id}`,
     {
@@ -222,8 +236,10 @@ function isRepeatingDecimal(token) {
 }
 
 function isFiniteDecimal(token) {
-  if (!token.raw) return false;
-  return !token.raw.includes("(");
+  return (
+    token.com_raw?.kind === "rational" &&
+    token.com_raw?.decimalType === "finite"
+  );
 }
 
 function isIrrational(token) {
@@ -232,3 +248,12 @@ function isIrrational(token) {
     token.raw.includes(sym)
   );
 }
+
+function judgeRationalInfinite({ token }) {
+  return (
+    token.com_raw?.kind === "rational" &&
+    token.com_raw?.decimalType === "infinite"
+  );
+}
+
+
